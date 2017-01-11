@@ -1,0 +1,64 @@
+# -*-python-*-
+
+DEBUG = False
+
+# list of directories to search for key files named below
+# (all keys will be looked for here, with and without '.pem')
+KEYDIRS = ['/home/phil/keys']
+
+# default user & key file, if nothing specified on command line, or below
+DEFUSER = None
+DEFKEY = None
+
+# use for shorthands for HOSTS or ASG names (exact matches only)
+ALIASES = {
+    # alias: realname
+    'mtest': 'ec2-12-34-56-78',
+}
+
+################################################################
+# HOSTS
+
+# not used yet: domains to check for host in
+DOMAINS = []
+
+# Before looking up a name as an ASG, a match is checked for in the
+# HOSTS list. This allows unambiguous prefixes to be used on command
+# line, and specific user/key combos to be specified.  ALL names
+# (whether or not they appear in the HOSTS list) are checked checked
+# as host names, and all IPv4 addresses (in a DNS round-robin pool)
+# are used as destinations.
+
+# ***** Entries here NEED NOT be in Amazon!!!! *****
+# *** Matches here will not be looked up in AWS (for key name) ***
+HOSTS = [
+    # hostname                          user            keyfile
+    ('host.not.in.an.asg',              '',             None),
+]
+
+################################################################
+# AWS
+
+# regions table:
+# ONLY THE KEYS ARE USED (values currently ignored)
+# prefer ordered dict!!!! (not available before 2.7)
+# hash of AWS region names, contains subhash with (optional) keys:
+#       default user, keyfile, domain (to append to i-XXX names)
+import collections
+AWS_REGIONS = collections.OrderedDict([
+    ('us-east-1', {'domain': '.e1.foobar.com'}),
+    ('us-west-1', {'domain': '.w1.foobar.com'})
+])
+
+# unambiguous prefix match here will be used to "complete" the name
+# regardless of whether the prefix on the command line matches
+# any "live" ASGs
+AWS_ASGS = [
+    # ASG name          region          user            keyfile
+    ('as-name',         'us-east-1',    None,           None),
+]
+
+# user to use with key name specified in live AWS instance,
+# using key file indicated by instance list.
+# (only if a local key file can be found)
+AWS_DEFUSER = 'ubuntu'

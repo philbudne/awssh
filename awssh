@@ -1,0 +1,168 @@
+#! /usr/bin/env python
+# -*-python-*-
+"""
+depends on boto format ~/.aws/credentials file:
+
+[default]
+aws_access_key_id = KEYNAMEHERE
+aws_secret_access_key = SuPerLoNgSeEkEeTkEyHeRe
+"""
+
+# XXX --config CONFIGFILE
+# XXX options for IPv4/IPv6/both
+
+# standard
+import sys
+import optparse
+
+# local
+from util import Util
+import settings
+
+__version__ = '0.1'
+
+def main():
+    parser = optparse.OptionParser(usage='awssh [options] [user@]host [command....]',
+                                   version=__version__
+    )
+
+    ### ssh options
+    parser.add_option("-i", dest="keyfile", default=None,
+                      help="select ssh private key", metavar="FILE")
+
+    parser.add_option("-p", dest="port", default=None,
+                      help="select port", metavar="PORT")
+
+    parser.add_option("-o", dest="ssh_opts", action="append", default=[],
+                      help="ssh options", metavar="OPT[=VALUE]")
+
+    parser.add_option("-L", dest="L_flags", action="append", default=[],
+                      help="forward local port to remote", metavar="ADDR")
+
+    parser.add_option("-R", dest="R_flags", action="append", default=[],
+                      help="forward remote port to local", metavar="ADDR")
+
+    # XXX add more ssh options in some mechanized way??
+
+    ### awssh options-- all should have a long name!!!
+
+    parser.add_option("-1", "--one", action="store_true", dest="one", default=False,
+                      help="connect to only first host")
+
+    parser.add_option("--check", action="store_true", dest="check", default=False,
+                      help="enable ssh remote host checks")
+
+    parser.add_option("--debug", action="store_true", dest="debug", default=False,
+                      help="debug awssh")
+
+#    parser.add_option("--ip", action="store_true", dest="ip", default=False,
+#                      help="connect by IP address")
+
+    parser.add_option("--groups", action="store_true", dest="groups", default=False,
+                      help="list (matching) groups (and instance counts) and exit")
+
+    parser.add_option("--list", action="store_true", dest="list", default=False,
+                      help="list addresses and exit")
+
+    parser.add_option("--quiet", action="store_true", dest="quiet", default=False,
+                      help="don't display addresses before connecting")
+
+    parser.add_option("--region", dest="region", default=None,
+                      help="select AWS region")
+
+    (options, args) = parser.parse_args()
+
+    # NOTE!! key added below!!!
+    ssh_options = []
+    if options.port:
+        ssh_options.extend(['-p', options.port])
+    for o in options.L_flags:
+        ssh_options.extend(['-L', o])
+    for o in options.R_flags:
+        ssh_options.extend(['-R', o])
+    for o in options.ssh_opts:
+        ssh_options.extend(['-o', o])
+
+    util = Util(options.debug)
+    if options.groups:          # list groups
+        if len(args) == 1:
+            prefix = args[0]
+        else:
+            prefix = ''
+        if options.region:
+            regions = [options.region]
+        else:
+            regions = settings.AWS_REGIONS.keys()
+        for rr in regions:
+            asgs = util.fetch_asgs(rr)
+            mm = ["{}({})".format(name, len(inst))
+                  for name, inst, rr in asgs
+                  if name.startswith(prefix) and inst]
+            if mm:
+                print "{}: {}".format(rr, ' '.join(mm))
+        sys.exit(0)
+
+    if len(args) < 1:
+        parser.error("need hostname")
+
+    # extract user from [user@]host
+    user = None
+    host = args[0]
+    if '@' in host:
+        user, host = host.split('@', 1)
+
+    # get list of (addr,(user,key)) tuples
+    auks = util.find_auks(host, options.region, debug=options.debug)
+
+    if options.list:
+        for addr, userkey in auks:
+            print addr
+        sys.exit(0)
+
+    if not auks:
+        print "no matches:", host # XXX use parser.error??
+        sys.exit(1)
+
+    status = 0
+    for addr, uk in auks:
+        # user, key from settings/AWS
+        u, k = uk
+
+        # command line arguments override everything
+        if user:
+            u = user
+        if options.keyfile:
+            k = options.keyfile
+
+        # assemble ssh command line
+        cmdline = ['/usr/bin/ssh']
+        if ssh_options:
+            cmdline.extend(ssh_options)
+        key = util.find_keyfile(k)
+        print k, key
+        if key:
+            cmdline.append('-i')
+            cmdline.append(key)
+
+        if u:
+            ua = u + '@' + addr # user-addr
+        else:
+            ua = addr
+        cmdline.append(ua)          # user/address
+        cmdline.extend(args[1:])
+
+        if options.debug:
+            print "====", ' '.join(cmdline)
+        elif not options.quiet:
+            print "====", addr
+
+        if options.one:
+            # single host: ~^Z works normally
+            util.exec_(args=cmdline, check=options.check)
+        else:
+            # exit with most recent error status
+            status = util.fork(args=cmdline, check=options.check) or status
+    sys.exit(status)
+
+if __name__ == '__main__':
+    main()

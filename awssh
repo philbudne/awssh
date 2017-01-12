@@ -139,7 +139,6 @@ def main():
         if ssh_options:
             cmdline.extend(ssh_options)
         key = util.find_keyfile(k)
-        print k, key
         if key:
             cmdline.append('-i')
             cmdline.append(key)

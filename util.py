@@ -29,7 +29,7 @@ import settings
 H_NAME, H_USER, H_KEY = 0, 1, 2
 
 # AWS_ASGS tuple entries
-A_NAME, A_USER, A_REGION, A_KEY = 0, 1, 2, 3
+A_NAME, A_REGION, A_USER, A_KEY = 0, 1, 2, 3
 
 # made it a class to hold "debug" setting!
 class Util(object):
@@ -129,7 +129,7 @@ class Util(object):
             return []
         instances = ec2conn.get_only_instances(instance_ids=names)
         return [(ii.ip_address, self._pick_user_key((user, key),
-                                              (settings.AWS_DEFUSER, ii.key_name)))
+                                                    (settings.AWS_DEFUSER, ii.key_name)))
                 for ii in instances]
 
     def find_auks(self, name, region, debug=True):
@@ -179,7 +179,6 @@ class Util(object):
             if not region:          # no region from command line
                 region = aa[A_REGION] # use region from match
             uu, kk = aa[A_USER], aa[A_KEY]
-
         ################
         # look for AWS Auto-Scale Groups in all known regions
         # if an AWS_ASGS entry was found above, use the region, if any

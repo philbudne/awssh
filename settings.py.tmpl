@@ -10,16 +10,16 @@ KEYDIRS = ['/home/phil/keys']
 DEFUSER = None
 DEFKEY = None
 
-# use for shorthands for HOSTS or ASG names (exact matches only)
+# use for shorthands for HOSTS or ASG names
 ALIASES = {
-    # alias: realname
-    'mtest': 'ec2-12-34-56-78',
+    # (alias, realname)
+    ('mtest', 'ec2-12-34-56-78'),
 }
 
 ################################################################
 # HOSTS
 
-# not used yet: domains to check for host in
+# domains to check for host in
 DOMAINS = []
 
 # Before looking up a name as an ASG, a match is checked for in the

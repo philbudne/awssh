@@ -97,18 +97,24 @@ class Util(object):
         currently always returns matched pair
         XXX still needs work????
         """
+        if self.debug: print "pick_user_key:"
         for uk in uks:
+            if self.debug: print uk
             # keyfile must exist!
             if uk[1]:
                 kf = self.find_keyfile(uk[1])
                 if not kf:
+                    if self.debug: print uk[1], "not found"
                     continue
                 return (uk[0], kf)
             # '' means use logged-in user
             # None accepted for key (use key from ~/.ssh)
             if uk[0] is not None:
+                if self.debug: print "returning", uk
                 return uk
-        return (settings.DEFUSER, settings.DEFKEY)
+        uk = (settings.DEFUSER, settings.DEFKEY)
+        if self.debug: print "returning", uk
+        return uk
 
     def _instance_auks(self, names, region, user, key):
         """
@@ -134,13 +140,17 @@ class Util(object):
 
     def find_auks(self, name, region, debug=True):
         """
-        return address/user/key matches
+        return address/user/key matches for name (in region)
+        @param name str name of alias, host or asg (may be prefix)
         @return [(addr,(user,key)),....]
         """
-        aa = settings.ALIASES.get(name, None)
-        if aa:
-            if debug: print "ALIASES match:", aa
-            name = aa
+        # backwards compatibility:
+        if isinstance(settings.ALIASES, dict):
+            settings.ALIASES = settings.ALIASES.items()
+        matches = [item for item in settings.ALIASES if item[0].startswith(name)]
+        if len(matches) == 1:
+            if self.debug: print "ALIAS match:", matches[0]
+            name = matches[0][1]
 
         hosts = self._check_hostname(name)
         if hosts:
@@ -156,7 +166,7 @@ class Util(object):
         if debug: print "HOSTS matches", matches
         if len(matches) == 1:
             h = matches[0]
-            print "matched", h[H_NAME]
+            print "matched HOST", h[H_NAME]
             return [(hh, self._pick_user_key((h[H_USER], h[H_KEY])))
                     for hh in self._check_hostname(h[H_NAME])]
 
@@ -201,8 +211,8 @@ class Util(object):
             name = aa[0]
             instances = aa[1]
             rr = aa[2]
-            print "matched", rr, name
-            # XXX look for REGIONS[region] for default domain
+            print "matched ASG", rr, name
+            # XXX look for REGIONS[region] for default domain, user, key
             # (currently always fetches IP addresses)
             return self._instance_auks(instances, rr, uu, kk)
         elif len(matches) > 1:

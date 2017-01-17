@@ -11,6 +11,8 @@ DEFUSER = None
 DEFKEY = None
 
 # use for shorthands for HOSTS or ASG names
+# an unambiguous prefix match for an alias will
+# substitute realname for the name on the command line.
 ALIASES = {
     # (alias, realname)
     ('mtest', 'ec2-12-34-56-78'),
@@ -19,7 +21,9 @@ ALIASES = {
 ################################################################
 # HOSTS
 
-# domains to check for host in
+# the name on the command line is first looked up as a host
+# (using DNS and the local hosts file).  If the name is not
+# found, it is looked up in these domains:
 DOMAINS = []
 
 # Before looking up a name as an ASG, a match is checked for in the

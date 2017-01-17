@@ -216,10 +216,8 @@ class Util(object):
             # (currently always fetches IP addresses)
             return self._instance_auks(instances, rr, uu, kk)
         elif len(matches) > 1:
-            # XXX display region??
-            print rr, "ambiguous:", ' '.join([aa[0] for aa in matches])
+            print "ambiguous:", ' '.join([aa[0] for aa in matches])
             # break loop?
-        # XXX display error: list asgs???
         return []
 
     def find_keyfile(self, name):

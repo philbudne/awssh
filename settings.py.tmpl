@@ -35,6 +35,9 @@ DOMAINS = []
 
 # ***** Entries here NEED NOT be in Amazon!!!! *****
 # *** Matches here will not be looked up in AWS (for key name) ***
+
+# '' for user means don't supply one to ssh (use logged in user)
+# None for user means use DEFUSER above
 HOSTS = [
     # hostname                          user            keyfile
     ('host.not.in.an.asg',              '',             None),

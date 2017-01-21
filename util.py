@@ -98,23 +98,25 @@ class Util(object):
         XXX still needs work????
         """
         if self.debug: print "pick_user_key:"
-        for uk in uks:
-            if self.debug: print uk
-            # keyfile must exist!
-            if uk[1]:
-                kf = self.find_keyfile(uk[1])
+        for user, key in uks:
+            if self.debug: print "  checking", (user, key)
+            # if keyfile given, keyfile must exist!
+            if key:
+                kf = self.find_keyfile(key)
                 if not kf:
-                    if self.debug: print uk[1], "not found"
+                    if self.debug: print "  key file not found", key
                     continue
-                return (uk[0], kf)
+                key = kf
+                break
             # '' means use logged-in user
             # None accepted for key (use key from ~/.ssh)
-            if uk[0] is not None:
-                if self.debug: print "returning", uk
-                return uk
-        uk = (settings.DEFUSER, settings.DEFKEY)
-        if self.debug: print "returning", uk
-        return uk
+            if user is not None:
+                break
+        else:
+            user, key = (settings.DEFUSER, settings.DEFKEY)
+        ret = (user, key)
+        if self.debug: print "  returning", ret
+        return ret
 
     def _instance_auks(self, names, region, user, key):
         """

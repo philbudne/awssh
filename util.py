@@ -41,7 +41,8 @@ class Util(object):
         exec ssh/scp
         """
         if not check:
-            # supress known_hosts warnings/additions
+            # supress known_hosts file warnings/additions
+            # (ASG instances are transient)
             args = [
                    args[0],
                    '-o', 'StrictHostKeyChecking=no',
@@ -66,9 +67,9 @@ class Util(object):
 
     def _check_hostname(self, name, fam=socket.AF_INET):
         """
-        take a name, check if a hostname
-        return list of addresses (as strings)
-        fam=AF_INET returns IPv4 only; AF_INET6 6 only; 0 returns 4 & 6
+        @param str name to check if a hostname
+        @param int fam AF_INET returns IPv4 only; AF_INET6 6 only; 0 returns 4 & 6
+        @return list of addresses (as strings)
         """
         # returns hosts file entries as well as DNS
         try:
@@ -78,6 +79,10 @@ class Util(object):
             return []
 
     def fetch_asgs(self, region):
+        """
+        @param str region to fetch ASGs from
+        @return list of (asg_name, [instance_name,.....], region)
+        """
         try:
             asconn = boto.ec2.autoscale.connect_to_region(region)
         except:
@@ -93,14 +98,16 @@ class Util(object):
 
     def _pick_user_key(self, *uks):
         """
-        args: (user, keyfile) tuples
-        currently always returns matched pair
-        XXX still needs work????
+        @param uks (user, keyfile) tuples
+        @return (user, keyfile) -- always a matched pair
+        likely still needs work????
         """
-        if self.debug: print "pick_user_key:"
+        if self.debug: print "pick_user_key", uks
         for user, key in uks:
             if self.debug: print "  checking", (user, key)
-            # if keyfile given, keyfile must exist!
+            if user is None and key is None:
+                continue
+            # if keyfile given, must exist!
             if key:
                 kf = self.find_keyfile(key)
                 if not kf:
@@ -125,7 +132,7 @@ class Util(object):
         @param region str region name
         @param user str user from AWS_ASGS, if any
         @param key str user from AWS_ASGS, if any
-        @return [(addr, (user, keyfile)),...]
+        @return list of (addr, (user, keyfile))
         """
         try:
             ec2conn = boto.ec2.connect_to_region(region)
@@ -137,14 +144,15 @@ class Util(object):
             return []
         instances = ec2conn.get_only_instances(instance_ids=names)
         return [(ii.ip_address, self._pick_user_key((user, key),
-                                                    (settings.AWS_DEFUSER, ii.key_name)))
+                                                    (settings.AWS_DEFUSER,
+                                                     ii.key_name)))
                 for ii in instances]
 
     def find_auks(self, name, region, debug=True):
         """
-        return address/user/key matches for name (in region)
-        @param name str name of alias, host or asg (may be prefix)
-        @return [(addr,(user,key)),....]
+        @param str name of alias, host or asg (may be prefix)
+        @param str region to check
+        @return list of (addr, (user, key))
         """
         # backwards compatibility:
         if isinstance(settings.ALIASES, dict):
@@ -223,6 +231,10 @@ class Util(object):
         return []
 
     def find_keyfile(self, name):
+        """
+        @param str name to check for a keyfile for
+        @return str path, if keyfile found, else None
+        """
         if not name:
             return None
         if os.path.isfile(name):

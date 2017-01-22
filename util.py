@@ -132,7 +132,7 @@ class Util(object):
         @param region str region name
         @param user str user from AWS_ASGS, if any
         @param key str user from AWS_ASGS, if any
-        @return list of (addr, (user, keyfile))
+        @return list of (ip_addr, (user, keyfile))
         """
         try:
             ec2conn = boto.ec2.connect_to_region(region)
@@ -143,10 +143,13 @@ class Util(object):
                 print "boto not installed"
             return []
         instances = ec2conn.get_only_instances(instance_ids=names)
-        return [(ii.ip_address, self._pick_user_key((user, key),
-                                                    (settings.AWS_DEFUSER,
-                                                     ii.key_name)))
-                for ii in instances]
+        return [(ii.ip_address,
+                 self._pick_user_key(
+                     (user, key),
+                     # only use DEFUSER if key_name is non-empty!
+                     (ii.key_name and settings.AWS_DEFUSER or None, ii.key_name))
+        )
+        for ii in instances]
 
     def find_auks(self, name, region, debug=True):
         """

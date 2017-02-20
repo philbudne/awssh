@@ -132,7 +132,7 @@ class Util(object):
         @param region str region name
         @param user str user from AWS_ASGS, if any
         @param key str user from AWS_ASGS, if any
-        @return list of (ip_addr, (user, keyfile))
+        @return list of (ip_addr, (user, keyfile), id)
         """
         try:
             ec2conn = boto.ec2.connect_to_region(region)
@@ -147,15 +147,15 @@ class Util(object):
                  self._pick_user_key(
                      (user, key),
                      # only use DEFUSER if key_name is non-empty!
-                     (ii.key_name and settings.AWS_DEFUSER or None, ii.key_name))
-        )
-        for ii in instances]
+                     (ii.key_name and settings.AWS_DEFUSER or None, ii.key_name)),
+                 ii.id)
+                for ii in instances]
 
     def find_auks(self, name, region, debug=True):
         """
         @param str name of alias, host or asg (may be prefix)
         @param str region to check
-        @return list of (addr, (user, key))
+        @return list of (addr, (user, key), id)
         """
         # backwards compatibility:
         if isinstance(settings.ALIASES, dict):
@@ -170,7 +170,7 @@ class Util(object):
             # look for exact match in HOSTS for user & key file
             for host, u, k in settings.HOSTS:
                 if host == name:
-                    return [(hh, self._pick_user_key((u, k))) for hh in hosts]
+                    return [(hh, self._pick_user_key((u, k)), None) for hh in hosts]
             # XXX look for wildcard (fnmatch) in HOSTS for user/key
             return [(hh, (None, None)) for hh in hosts]
 
@@ -180,7 +180,7 @@ class Util(object):
         if len(matches) == 1:
             h = matches[0]
             print "matched HOST", h[H_NAME]
-            return [(hh, self._pick_user_key((h[H_USER], h[H_KEY])))
+            return [(hh, self._pick_user_key((h[H_USER], h[H_KEY])), None)
                     for hh in self._check_hostname(h[H_NAME])]
 
         # check as hostname in DOMAINS
@@ -188,7 +188,7 @@ class Util(object):
             hosts = self._check_hostname(name)
             if hosts:
                 # XXX look for wildcard (fnmatch) in HOSTS for user/key
-                return [(hh, (None, None)) for hh in hosts]
+                return [(hh, (None, None), None) for hh in hosts]
 
         ################
         # see if a prefix of a single AWS_ASGS entry, if so, use full name, region, user, key

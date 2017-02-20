@@ -25,6 +25,7 @@ def main():
     parser = optparse.OptionParser(usage='awssh [options] [user@]host [command....]',
                                    version=__version__
     )
+    parser.disable_interspersed_args()
 
     ### ssh options
     parser.add_option("-i", dest="keyfile", default=None,
@@ -115,8 +116,8 @@ def main():
     auks = util.find_auks(host, options.region, debug=options.debug)
 
     if options.list:
-        for addr, userkey in auks:
-            print addr
+        for addr, userkey, id in auks:
+            print id, addr
         sys.exit(0)
 
     if not auks:
@@ -124,7 +125,7 @@ def main():
         sys.exit(1)
 
     status = 0
-    for addr, uk in auks:
+    for addr, uk, id_ in auks:
         # user, key from settings/AWS
         u, k = uk
 
@@ -150,10 +151,11 @@ def main():
         cmdline.append(ua)          # user/address
         cmdline.extend(args[1:])
 
+        name = id_ or ""
         if options.debug:
             print "====", ' '.join(cmdline)
         elif not options.quiet:
-            print "====", addr
+            print "====", addr, id_ # just id_??
 
         if options.one:
             # single host: ~^Z works normally

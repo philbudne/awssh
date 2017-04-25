@@ -151,7 +151,7 @@ class Util(object):
                  ii.id)
                 for ii in instances]
 
-    def find_auks(self, name, region, debug=True):
+    def find_auks(self, name, region):
         """
         @param str name of alias, host or asg (may be prefix)
         @param str region to check
@@ -160,23 +160,32 @@ class Util(object):
         # backwards compatibility:
         if isinstance(settings.ALIASES, dict):
             settings.ALIASES = settings.ALIASES.items()
+
+        # look for prefix matches in ALIASES:
         matches = [item for item in settings.ALIASES if item[0].startswith(name)]
         if len(matches) == 1:
             if self.debug: print "ALIAS match:", matches[0]
             name = matches[0][1]
+        elif self.debug:
+            if len(matches) > 1:
+                print "multiple ALIAS matches:", matches
+            else:
+                print "no ALIAS matches"
 
         hosts = self._check_hostname(name)
+        if self.debug: print "hosts", hosts
         if hosts:
             # look for exact match in HOSTS for user & key file
             for host, u, k in settings.HOSTS:
                 if host == name:
+                    if self.debug: print "HOST match:", host, u, k
                     return [(hh, self._pick_user_key((u, k)), None) for hh in hosts]
             # XXX look for wildcard (fnmatch) in HOSTS for user/key
-            return [(hh, (None, None)) for hh in hosts]
+            return [(hh, (None, None), None) for hh in hosts]
 
         # see if a prefix of a single HOSTS entry
         matches = [item for item in settings.HOSTS if item[H_NAME].startswith(name)]
-        if debug: print "HOSTS matches", matches
+        if self.debug: print "HOSTS matches", matches
         if len(matches) == 1:
             h = matches[0]
             print "matched HOST", h[H_NAME]
@@ -194,7 +203,7 @@ class Util(object):
         # see if a prefix of a single AWS_ASGS entry, if so, use full name, region, user, key
 
         matches = [item for item in settings.AWS_ASGS if item[0].startswith(name)]
-        if debug: print "AWS_ASGS matches", matches
+        if self.debug: print "AWS_ASGS matches", matches
         uu = kk = None
         if len(matches) == 1:
             aa = matches[0]
@@ -218,7 +227,7 @@ class Util(object):
 
         # get prefix matches
         matches = [asg for asg in asgs if asg[0].startswith(name)]
-        if debug: print "active asg matches", matches
+        if self.debug: print "active asg matches", matches
         if len(matches) == 1:
             aa = matches[0]
             name = aa[0]

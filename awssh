@@ -113,11 +113,11 @@ def main():
         user, host = host.split('@', 1)
 
     # get list of (addr,(user,key)) tuples
-    auks = util.find_auks(host, options.region, debug=options.debug)
+    auks = util.find_auks(host, options.region)
 
     if options.list:
         for addr, userkey, id in auks:
-            print id, addr
+            print addr, userkey, id
         sys.exit(0)
 
     if not auks:
@@ -125,6 +125,7 @@ def main():
         sys.exit(1)
 
     status = 0
+    if options.debug: print "auks", auks
     for addr, uk, id_ in auks:
         # user, key from settings/AWS
         u, k = uk

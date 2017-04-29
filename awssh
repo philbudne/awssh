@@ -145,6 +145,9 @@ def main():
             cmdline.append('-i')
             cmdline.append(key)
 
+        if addr is None:
+            continue
+
         if u:
             ua = u + '@' + addr # user-addr
         else:

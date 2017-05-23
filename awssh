@@ -126,6 +126,7 @@ def main():
 
     status = 0
     if options.debug: print "auks", auks
+    no_addrs = True
     for addr, uk, id_ in auks:
         # user, key from settings/AWS
         u, k = uk
@@ -147,6 +148,7 @@ def main():
 
         if addr is None:
             continue
+	no_addrs = False
 
         if u:
             ua = u + '@' + addr # user-addr
@@ -167,6 +169,8 @@ def main():
         else:
             # exit with most recent error status
             status = util.fork(args=cmdline, check=options.check) or status
+    if no_addrs:
+	print "no addresses found"
     sys.exit(status)
 
 if __name__ == '__main__':

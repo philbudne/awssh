@@ -181,7 +181,7 @@ class Util(object):
                     if self.debug: print "HOST match:", host, u, k
                     return [(hh, self._pick_user_key((u, k)), None) for hh in hosts]
             # XXX look for wildcard (fnmatch) in HOSTS for user/key
-            return [(hh, (None, None), None) for hh in hosts]
+            return [(hh, (settings.DEFUSER, settings.DEFKEY), None) for hh in hosts]
 
         # see if a prefix of a single HOSTS entry
         matches = [item for item in settings.HOSTS if item[H_NAME].startswith(name)]
@@ -197,7 +197,7 @@ class Util(object):
             hosts = self._check_hostname(name)
             if hosts:
                 # XXX look for wildcard (fnmatch) in HOSTS for user/key
-                return [(hh, (None, None), None) for hh in hosts]
+                return [(hh, (settings.DEFUSER, settings.DEFKEY), None) for hh in hosts]
 
         ################
         # see if a prefix of a single AWS_ASGS entry, if so, use full name, region, user, key

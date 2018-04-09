@@ -159,9 +159,10 @@ def main():
 
         name = id_ or ""
         if options.debug:
-            print "====", ' '.join(cmdline)
+            sys.stderr.write("==== {}\n".format(' '.join(cmdline)))
         elif not options.quiet:
-            print "====", addr, id_ # just id_??
+            # just id_??
+            sys.stderr.write("==== {} {}\n".format(addr, id_))
 
         if options.one:
             # single host: ~^Z works normally
@@ -170,7 +171,7 @@ def main():
             # exit with most recent error status
             status = util.fork(args=cmdline, check=options.check) or status
     if no_addrs:
-	print "no addresses found"
+	sys.stderr.write("no addresses found\n")
     sys.exit(status)
 
 if __name__ == '__main__':

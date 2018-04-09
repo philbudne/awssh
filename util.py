@@ -188,7 +188,7 @@ class Util(object):
         if self.debug: print "HOSTS matches", matches
         if len(matches) == 1:
             h = matches[0]
-            print "matched HOST", h[H_NAME]
+            sys.stderr.write("matched HOST {}\n".format(h[H_NAME]))
             return [(hh, self._pick_user_key((h[H_USER], h[H_KEY])), None)
                     for hh in self._check_hostname(h[H_NAME])]
 
@@ -233,7 +233,7 @@ class Util(object):
             name = aa[0]
             instances = aa[1]
             rr = aa[2]
-            print "matched ASG", rr, name
+            sys.stderr.write("matched ASG {} {}\n".format(rr, name))
             # XXX look for REGIONS[region] for default domain, user, key
             # (currently always fetches IP addresses)
             return self._instance_auks(instances, rr, uu, kk)
